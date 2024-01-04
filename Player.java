@@ -6,6 +6,7 @@ public class Player {
     private int handSize;
     private final int MAX_HAND_SIZE = 15; 
     private String name;
+    private String chosenColor; // Field to store the chosen color for wild cards
 
     // Constructor
     public Player(String name) {
@@ -35,6 +36,9 @@ public class Player {
             // Or handle this scenario as per your game's rules
         }
     }
+    public String getChosenColor() {
+        return chosenColor;
+    }
 
     // Play a card from the hand
     public void playCard(int index, Card currentCard, Stack<Card> discardPile, Scanner scanner) {
@@ -44,10 +48,9 @@ public class Player {
             if (isValidMove(cardToPlay, currentCard)) {
                 // Valid move: play the card
                 discardPile.push(cardToPlay);
-                if ("WILD".equals(cardToPlay.getType()) || "WILDPLUS4".equals(cardToPlay.getType())) {
+                if (cardToPlay.getType().equals("WILD") || cardToPlay.getType().equals("WILDPLUS4")) {
                     System.out.println("You played a wild card! Choose a new color (RED, YELLOW, BLUE, GREEN):");
-                    String newColor = scanner.nextLine().toUpperCase();
-                    cardToPlay.setChosenColor(newColor); // Set the chosen color for the wild card
+                    chosenColor = scanner.nextLine().toUpperCase();
                 }
                 // Shift remaining cards left
                 for (int i = index; i < handSize - 1; i++) {
