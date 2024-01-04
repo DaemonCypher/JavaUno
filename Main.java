@@ -1,3 +1,4 @@
+import java.util.Collections;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -7,7 +8,6 @@ public class Main {
     private Card currentCard; // Top card of the discard pile
     private Scanner scanner;
     private Stack<Card> discardPile;
-
 
     public Main() {
         players = new Stack<>();
@@ -27,14 +27,6 @@ public class Main {
         }
 
         dealCards();
-
-        startGame();
-
-        if (!gameDeck.isEmpty()) {
-            currentCard = gameDeck.draw();
-            System.out.println("Initial card on discard pile: " + currentCard);
-        }
-    
         startGame();
     }
 
@@ -49,30 +41,71 @@ public class Main {
         }
     }
 
+    public void multidraw(int x, Player player) {
+        for (int i = 0; i < x; i++) {
+            player.addCardToHand(gameDeck.draw());
+        }
+    }
+
     private void startGame() {
         discardPile = new Stack<>();
         currentCard = gameDeck.draw();
-        discardPile.push(currentCard); // Initialize the discard pile with the first card
-        boolean gameEnded = false;
-        while (!gameEnded) {
-            
-            for (Player player : players) 
-            {
-                
-                System.out.println("Current card: " + currentCard);
-                player.showHand();
-                player.choices(scanner, gameDeck, currentCard, discardPile);
+        discardPile.push(currentCard);
     
-                // Update the current card only if a new card is played
-                if (!discardPile.isEmpty() && discardPile.peek() != currentCard) {
-                    currentCard = discardPile.peek();
+        boolean gameEnded = false;
+        boolean isReverse = false;
+        int currentPlayerIndex = 0;
+    
+        while (!gameEnded) {
+            Player currentPlayer = players.get(currentPlayerIndex);
+            System.out.println("Current card: " + currentCard);
+    
+            currentPlayer.showHand();
+            Card playedCard = currentPlayer.choices(scanner, gameDeck, currentCard, discardPile);
+    
+            if (playedCard != null) {
+                currentCard = playedCard;
+                discardPile.push(currentCard);
+    
+                // Update the current card for a wild card with the chosen color
+                if (currentCard.getType().equals("WILD") || currentCard.getType().equals("WILDPLUS4")) {
+                    String chosenColor = currentPlayer.getChosenColor(); // Method to get chosen color from player
+                    currentCard = new Card(chosenColor, currentCard.getType()); // Set the new color for the current card
                 }
     
-                // Implement game end logic here
-                // For example, check if any player has an empty hand
+                // Handle other action cards
+                handleActionCard(currentCard, currentPlayer, isReverse);
+            }
+    
+            currentPlayerIndex = getNextPlayerIndex(currentPlayerIndex, isReverse, players.size());
+    
+            if (currentPlayer.getHandSize() == 0) {
+                System.out.println(currentPlayer.getName() + " has won!");
+                gameEnded = true;
+            }
         }
     }
-}
+    
+    private void handleActionCard(Card card, Player currentPlayer, boolean isReverse) {
+        if (card.getType().equals("PLUS2")) {
+            multidraw(2, currentPlayer);
+        } else if (card.getType().equals("WILDPLUS4")) {
+            multidraw(4, currentPlayer);
+        } else if (card.getType().equals("REVERSE")) {
+            isReverse = !isReverse; // Toggle the direction of play
+            System.out.println("Play direction reversed!");
+        } else if (card.getType().equals("SKIP")) {
+            System.out.println(currentPlayer.getName() + " is skipped!");
+        }
+    }
+
+    private int getNextPlayerIndex(int currentIndex, boolean isReverse, int playerCount) {
+        if (isReverse) {
+            return (currentIndex - 1 + playerCount) % playerCount;
+        } else {
+            return (currentIndex + 1) % playerCount;
+        }
+    }
 
     public static void main(String[] args) {
         Main game = new Main();
