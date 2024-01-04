@@ -4,7 +4,7 @@ import java.util.Stack;
 public class Player {
     private Card[] hand;
     private int handSize;
-    private int MAX_HAND_SIZE = 15; // Assuming a maximum hand size, adjust as necessary
+    private final int MAX_HAND_SIZE = 15; 
     private String name;
 
     // Constructor
@@ -14,13 +14,16 @@ public class Player {
         this.name = name;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public boolean isValidMove(Card playedCard, Card currentCard) {
         return playedCard.getColor().equals(currentCard.getColor()) ||
                playedCard.getType().equals(currentCard.getType()) ||
-               playedCard.getType().equals("WILD") ||
-               playedCard.getType().equals("WILDPLUS4");
+               "WILD".equals(playedCard.getType()) ||
+               "WILDPLUS4".equals(playedCard.getType());
     }
-    
 
     // Adds a card to the player's hand
     public void addCardToHand(Card card) {
@@ -28,7 +31,6 @@ public class Player {
             hand[handSize] = card;
             handSize++;
         } else {
-            MAX_HAND_SIZE = MAX_HAND_SIZE + 5;
             System.out.println("Hand is full!");
             // Or handle this scenario as per your game's rules
         }
@@ -42,11 +44,10 @@ public class Player {
             if (isValidMove(cardToPlay, currentCard)) {
                 // Valid move: play the card
                 discardPile.push(cardToPlay);
-                if (cardToPlay.getType().equals("WILD") || cardToPlay.getType().equals("WILDPLUS4")) {
+                if ("WILD".equals(cardToPlay.getType()) || "WILDPLUS4".equals(cardToPlay.getType())) {
                     System.out.println("You played a wild card! Choose a new color (RED, YELLOW, BLUE, GREEN):");
                     String newColor = scanner.nextLine().toUpperCase();
-                    // You might want to validate the chosen color here
-                    currentCard.setColor(newColor);  // Set the new color for the current card
+                    cardToPlay.setChosenColor(newColor); // Set the chosen color for the wild card
                 }
                 // Shift remaining cards left
                 for (int i = index; i < handSize - 1; i++) {
@@ -67,14 +68,19 @@ public class Player {
 
     // Display the player's hand
     public void showHand() {
-        String output =String.format("Player's %s hand:", name);
+        String output = String.format("Player's %s hand:", name);
         System.out.println(output);
         for (int i = 0; i < handSize; i++) {
             System.out.println(i + ": " + hand[i]);
         }
     }
 
-    public void choices(Scanner scanner, Deck gameDeck, Card currentCard, Stack<Card> discardPile) {
+    public int getHandSize() {
+        return handSize;
+    }
+
+    public Card choices(Scanner scanner, Deck gameDeck, Card currentCard, Stack<Card> discardPile) {
+        Card playedCard = null;
         boolean validMoveMade = false;
         while (!validMoveMade) {
             System.out.println(name + ", choose an action:");
@@ -96,7 +102,8 @@ public class Player {
                         if (scanner.hasNextInt()) {
                             int index = scanner.nextInt();
                             scanner.nextLine(); // Consume newline
-                            if (isValidMove(hand[index], currentCard)) {
+                            if (index >= 0 && index < handSize && isValidMove(hand[index], currentCard)) {
+                                playedCard = hand[index];
                                 playCard(index, currentCard, discardPile, scanner);
                                 validMoveMade = true;
                             } else {
@@ -115,6 +122,6 @@ public class Player {
                     break;
             }
         }
+        return playedCard;
     }
-    
 }
